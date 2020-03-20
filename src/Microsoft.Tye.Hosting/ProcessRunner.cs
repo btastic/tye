@@ -4,14 +4,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Tye.Hosting.Model;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
+using Microsoft.Tye.Hosting.Model;
 
 namespace Microsoft.Tye.Hosting
 {
@@ -296,18 +296,17 @@ namespace Microsoft.Tye.Hosting
             var debugOutputPath = Path.Combine(Path.GetDirectoryName(projectFilePath)!, "bin", "Debug");
 
             var tfms = Directory.Exists(debugOutputPath) ? Directory.GetDirectories(debugOutputPath) : Array.Empty<string>();
-
             if (tfms.Length > 0)
             {
-                // Pick the first one
-                var path = Path.Combine(debugOutputPath, tfms[0], outputFileName);
-                if (File.Exists(path))
+                foreach (var tfm in tfms)
                 {
-                    return path;
+                    // Evaluate until we find one
+                    var path = Path.Combine(debugOutputPath, tfm, outputFileName);
+                    if (File.Exists(path))
+                    {
+                        return path;
+                    }
                 }
-
-                // Older versions of .NET Core didn't have TFMs
-                return Path.Combine(debugOutputPath, tfms[0], Path.GetFileNameWithoutExtension(projectFilePath) + ".dll");
             }
 
             return Path.Combine(debugOutputPath, "netcoreapp3.1", outputFileName);
